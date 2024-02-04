@@ -1,8 +1,8 @@
 import 'package:cypher_sheet/components/text.dart';
 import 'package:flutter/material.dart';
 
-class SearchBar extends StatelessWidget {
-  const SearchBar({super.key, required this.onSearch});
+class AppSearchBar extends StatelessWidget {
+  const AppSearchBar({super.key, required this.onSearch});
 
   final Function(String) onSearch;
 

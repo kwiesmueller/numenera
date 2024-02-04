@@ -3,13 +3,13 @@ import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:cypher_sheet/state/providers/character.dart';
 import 'package:cypher_sheet/state/providers/import.dart';
 import 'package:cypher_sheet/state/providers/inventories.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:cypher_sheet/views/dialogs/share_character.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cypher_sheet/components/box.dart';
 import 'package:cypher_sheet/components/dialog.dart';
 import 'package:cypher_sheet/components/text.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
 import 'package:cypher_sheet/testdata.dart';
 
 class DevCharacterList extends ConsumerWidget {
@@ -17,6 +17,7 @@ class DevCharacterList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final storage = ref.watch(storageProvider);
     return AppScrollView(
       slivers: [
         Padding(
@@ -29,7 +30,7 @@ class DevCharacterList extends ConsumerWidget {
         ),
         AppBox(
           onTap: () async {
-            writeInitialCharacterRevision(finch);
+            storage.createCharacter(finch);
             ref.invalidate(characterListProvider);
           },
           child: const Padding(

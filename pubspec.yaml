@@ -4,35 +4,47 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.1.3+8
 
 environment:
-  sdk: ">=2.18.1 <3.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.1.1
-  google_fonts: ^4.0.3
+  flutter_riverpod: ^2.3.6
+  google_fonts: ^6.1.0
   flutter_svg: ^2.0.2
-  protobuf: ^2.1.0
+  protobuf: ^3.1.0
   path_provider: ^2.0.11
-  path: ^1.8.2
-  uuid: ^3.0.7
+  path: ^1.8.0
+  uuid: ^4.3.3
   json_diff: ^0.2.1
   flutter_colorpicker: ^1.0.3
-  share_plus: ^6.3.1
-  file_picker: ^5.2.5
+  share_plus: ^7.2.2
+  file_picker: ^6.1.1
   flutter_markdown: ^0.6.14
   url_launcher: ^6.1.10
   equatable: ^2.0.5
   grpc: ^3.1.0
-  receive_sharing_intent: ^1.4.5
-  uri_to_file: ^0.2.0
+  receive_sharing_intent: ^1.6.7
+  uri_to_file: ^1.0.0
+
+dependency_overrides:
+  receive_sharing_intent:
+    git:
+      url: https://github.com/kwiesmueller/receive_sharing_intent.git
+      ref: bb2b8fc1cacea3758f8d95a79b51c47198143c84
+  uri_to_file:
+    git:
+      url: https://github.com/kwiesmueller/uri-to-file.git
+      ref: 7d73fb41ecdef31f8130992071f97749329cc5ed
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.1
+  flutter_lints: ^3.0.1
   build_runner: ^2.3.3
   flutter_oss_licenses: ^2.0.1
+  riverpod_lint: ^2.3.9
+  custom_lint: ^0.6.0
 
 flutter:
   uses-material-design: true

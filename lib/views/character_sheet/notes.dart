@@ -74,7 +74,7 @@ class NotesView extends ConsumerWidget {
           ]),
         ),
         if (searchActive)
-          SearchBar(
+          AppSearchBar(
             onSearch: (newValue) {
               ref.read(noteSearchProvider.notifier).state = newValue;
             },

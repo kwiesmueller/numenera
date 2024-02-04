@@ -1,12 +1,15 @@
 import 'dart:developer';
 
 import 'package:cypher_sheet/state/providers/character.dart';
+import 'package:cypher_sheet/state/storage/storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:json_diff/json_diff.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
 
 class Persister extends ProviderObserver {
+  const Persister(this.storage) : super();
+
+  final CharacterStorage storage;
   @override
   void didUpdateProvider(
     ProviderBase provider,
@@ -46,7 +49,8 @@ class Persister extends ProviderObserver {
     DiffNode diff = differ.diff();
     log("diff: $diff");
 
-    final newRevision = await writeLatestCharacterRevision(newCharacter);
+    final newRevision =
+        await storage.writeLatestCharacterRevision(newCharacter);
     log("wrote update for character resulting in new revision $newRevision");
   }
 }

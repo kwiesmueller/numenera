@@ -6,9 +6,13 @@ import 'package:cypher_sheet/components/box.dart';
 import 'package:cypher_sheet/components/text.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:cypher_sheet/state/providers/import.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:cypher_sheet/state/providers/style.dart';
+import 'package:cypher_sheet/state/storage/file.dart';
+import 'package:cypher_sheet/state/storage/storage.dart';
 import 'package:cypher_sheet/views/import_character_selection.dart';
 import 'package:cypher_sheet/views/scaffold.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,9 +22,21 @@ import 'package:cypher_sheet/views/character_sheet/view.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:uri_to_file/uri_to_file.dart';
 
-void main() {
-  runApp(
-      ProviderScope(observers: [Persister()], child: const CypherSheetApp()));
+
+void main() async {
+  late CharacterStorage storage;
+  if (kIsWeb) {
+    throw UnsupportedError("Web is not supported");
+  } else {
+    storage = LocalCharacterStorage();
+  }
+  runApp(ProviderScope(
+    overrides: [
+      storageProvider.overrideWith((ref) => storage),
+    ],
+    observers: [Persister(storage)],
+    child: const CypherSheetApp(),
+  ));
 }
 
 class CypherSheetApp extends ConsumerStatefulWidget {
@@ -32,13 +48,12 @@ class CypherSheetApp extends ConsumerStatefulWidget {
 
 class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
   late StreamSubscription _intentDataStreamSubscription;
-  late StreamSubscription _intentTextDataStreamSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       // For sharing coming from outside the app while the app is in the memory
       _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
           .listen((List<SharedMediaFile> value) {
@@ -47,13 +62,7 @@ class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
       }, onError: (err) {
         log("getIntentDataStream error: $err");
       });
-      _intentTextDataStreamSubscription =
-          ReceiveSharingIntent.getTextStream().listen(
-        (String value) {
-          log("received text stream");
-          importUri(value);
-        },
-      );
+
 
       // For sharing coming from outside the app while the app is closed
       ReceiveSharingIntent.getInitialMedia()
@@ -61,17 +70,14 @@ class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
         log("received initial media");
         importMediaFile(value);
       });
-      ReceiveSharingIntent.getInitialText().then((value) {
-        log("received initial text");
-        importUri(value);
-      });
     }
   }
 
   @override
   void dispose() {
-    _intentDataStreamSubscription.cancel();
-    _intentTextDataStreamSubscription.cancel();
+    if (!kIsWeb && Platform.isAndroid) {
+      _intentDataStreamSubscription.cancel();
+    }
     super.dispose();
   }
 

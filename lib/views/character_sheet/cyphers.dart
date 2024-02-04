@@ -157,7 +157,7 @@ class CyphersView extends ConsumerWidget {
             ),
           ),
         if (searchActive)
-          SearchBar(onSearch: (newValue) {
+          AppSearchBar(onSearch: (newValue) {
             ref.read(cypherAndArtifactSearchProvider.notifier).state = newValue;
           }),
         ...activeCyphers

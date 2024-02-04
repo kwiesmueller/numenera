@@ -1,8 +1,8 @@
 import 'package:cypher_sheet/components/icon.dart';
 import 'package:cypher_sheet/components/icons.dart';
 import 'package:cypher_sheet/extensions/metadata.dart';
-import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:cypher_sheet/state/providers/character.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:cypher_sheet/state/storage/file.dart';
 import 'package:cypher_sheet/views/dialogs/share_character.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +12,14 @@ import 'package:cypher_sheet/components/dialog.dart';
 import 'package:cypher_sheet/components/text.dart';
 
 class EditCharacterMeta extends ConsumerWidget {
-  const EditCharacterMeta({super.key, required this.metadata});
-
-  final CharacterMetadata metadata;
+  const EditCharacterMeta({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
+    final storage = ref.watch(storageProvider);
+    final asyncMetadata = ref.watch(metadataProvider);
+    return asyncMetadata.when(
+      data: (metadata) => Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -67,7 +68,7 @@ class EditCharacterMeta extends ConsumerWidget {
         const SizedBox(height: 16.0),
         Expanded(
           child: FutureBuilder(
-            future: readCharacterRevisions(metadata.uuid),
+              future: storage.getCharacterRevisions(metadata.uuid),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return CustomScrollView(
@@ -81,14 +82,36 @@ class EditCharacterMeta extends ConsumerWidget {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8.0),
                               child: RevisionListItem(
-                                metadata: metadata,
+                                  // metadata: metadata,
                                 revision: snapshot.data![index],
                               ),
                             );
                           },
                           childCount: snapshot.data!.length,
                         ),
-                      )
+                        ),
+                        SliverList.list(
+                          children: [
+                            AppBox(
+                              onTap: () {
+                                showConfirmDialog(
+                                    context,
+                                    AppText(
+                                        "Warning\nThis will permanently delete character\n${metadata.name}",
+                                        maxLines: 4,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge), () {
+                                  storage.deleteCharacter(metadata.uuid);
+                                  ref.invalidate(characterListProvider);
+                                  closeDialog(context);
+                                });
+                              },
+                              color: Theme.of(context).colorScheme.error,
+                              child: const AppText("Delete Character"),
+                            )
+                          ],
+                        ),
                     ]);
               }
               if (snapshot.hasError) {
@@ -103,43 +126,30 @@ class EditCharacterMeta extends ConsumerWidget {
         ),
         const SizedBox(height: 28.0),
         AppBox(
-          onTap: () {
-            showConfirmDialog(
-                context,
-                AppText(
-                    "Warning\nThis will permanently delete character\n${metadata.name}",
-                    maxLines: 4,
-                    style: Theme.of(context).textTheme.labelLarge), () {
-              deleteCharacter(metadata.uuid);
-              ref.invalidate(characterListProvider);
-              closeDialog(context);
-            });
-          },
-          color: Theme.of(context).colorScheme.error,
-          child: const AppText("Delete Character"),
-        ),
-        const SizedBox(height: 28.0),
-        AppBox(
-          onTap: (() {
+            onTap: (() {
             closeDialog(context);
           }),
           child: const AppText("Close"),
         ),
       ],
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stackTrace) => Text("Error: $err"),
     );
   }
 }
 
 class RevisionListItem extends ConsumerWidget {
-  const RevisionListItem(
-      {super.key, required this.metadata, required this.revision});
+  const RevisionListItem({super.key, required this.revision});
 
-  final CharacterMetadata metadata;
   final int revision;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AppBox(
+    final storage = ref.watch(storageProvider);
+    final asyncMetadata = ref.watch(metadataProvider);
+    return asyncMetadata.when(
+      data: (metadata) => AppBox(
       customPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
@@ -151,9 +161,10 @@ class RevisionListItem extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(width: 10),
+            if (storage is LocalCharacterStorage)
           FutureBuilder(
-            future:
-                getCharacterRevisionStorageSizeBytes(metadata.uuid, revision),
+                future: storage.getCharacterRevisionStorageSizeBytes(
+                    metadata.uuid, revision),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 return AppText(
@@ -179,12 +190,12 @@ class RevisionListItem extends ConsumerWidget {
                         "Warning\nThis will permanently delete revision\n${metadata.uuid}#${revision.toString()}",
                         maxLines: 5,
                         style: Theme.of(context).textTheme.labelLarge), () {
-                  deleteCharacterRevision(metadata.uuid, revision);
+                    storage.deleteCharacterRevision(metadata.uuid, revision);
                   ref.invalidate(characterListProvider);
                   closeDialog(context);
                   showAppDialog(
                     context,
-                    EditCharacterMeta(metadata: metadata),
+                      const EditCharacterMeta(),
                     fullscreen: true,
                   );
                 });
@@ -196,6 +207,9 @@ class RevisionListItem extends ConsumerWidget {
               ))
         ],
       ),
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Text("$error"),
     );
   }
 }

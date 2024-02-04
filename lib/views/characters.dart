@@ -1,6 +1,7 @@
 import 'package:cypher_sheet/extensions/metadata.dart';
 import 'package:cypher_sheet/main.dart';
 import 'package:cypher_sheet/state/providers/character.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:cypher_sheet/views/dialogs/edit_character_meta.dart';
 import 'package:cypher_sheet/views/scaffold.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,6 @@ import 'package:cypher_sheet/components/icons.dart';
 import 'package:cypher_sheet/components/scroll.dart';
 import 'package:cypher_sheet/components/text.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
 import 'package:cypher_sheet/views/dialogs/create_character.dart';
 import 'package:cypher_sheet/views/dialogs/dev_character_list.dart';
 
@@ -97,6 +97,7 @@ class CharacterListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final storage = ref.watch(storageProvider);
     return FutureBuilder(
       future: metadata,
       builder: (context, snapshot) {
@@ -104,12 +105,15 @@ class CharacterListItem extends ConsumerWidget {
           return AppBox(
             color: Theme.of(context).colorScheme.surface,
             onTap: (() async {
-              final character =
-                  await readLatestCharacterRevision(snapshot.data!.uuid);
+              ref.read(currentUUIDProvider.notifier).state =
+                  snapshot.data!.uuid;
+              final character = await storage.getCharacter(snapshot.data!.uuid);
               ref.read(characterProvider.notifier).load(character);
+              
               if (!context.mounted) return;
               Navigator.of(context).pushReplacementNamed(routeCharacter);
             }),
+            customPadding: const EdgeInsets.only(left: 16, bottom: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -119,7 +123,7 @@ class CharacterListItem extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0),
+                      padding: const EdgeInsets.only(top: 16, bottom: 8.0),
                       child: AppText(
                         snapshot.data!.name,
                         style: Theme.of(context).textTheme.bodyLarge,
@@ -128,15 +132,17 @@ class CharacterListItem extends ConsumerWidget {
                     const Spacer(),
                     AppBox(
                       onTap: () {
+                        ref.read(currentUUIDProvider.notifier).state =
+                            snapshot.data!.uuid;
                         showAppDialog(
                           context,
-                          EditCharacterMeta(metadata: snapshot.data!),
+                          const EditCharacterMeta(),
                           fullscreen: true,
                         );
                       },
                       flat: true,
-                      padding: 4,
-                      child: const AppIcon(AppIcons.edit, size: 24),
+                      padding: 16,
+                      child: const AppIcon(AppIcons.edit, size: 26),
                     )
                   ],
                 ),
@@ -148,6 +154,9 @@ class CharacterListItem extends ConsumerWidget {
                   "${snapshot.data!.revisions.length.toString()} active revision${snapshot.data!.revisions.length > 1 ? "s" : ""} @ ${formatBytes(snapshot.data!.storageSize)}",
                   style: Theme.of(context).textTheme.labelSmall,
                 ),
+                const SizedBox(
+                  height: 8,
+                )
               ],
             ),
           );

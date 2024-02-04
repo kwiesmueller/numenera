@@ -100,7 +100,7 @@ List<Widget> equipmentFilters(WidgetRef ref) {
     const ItemTypeFilter(),
     const InventoryFilter(),
     if (ref.watch(itemSearchActiveProvider))
-      SearchBar(onSearch: (search) {
+      AppSearchBar(onSearch: (search) {
         ref.read(itemSearchProvider.notifier).state = search;
       }),
   ];

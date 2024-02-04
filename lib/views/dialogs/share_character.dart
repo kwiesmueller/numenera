@@ -6,8 +6,7 @@ import 'package:cypher_sheet/components/dialog.dart';
 import 'package:cypher_sheet/components/text.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:cypher_sheet/state/providers/character.dart';
-import 'package:cypher_sheet/state/storage/api.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,6 +19,7 @@ class ShareCharacter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final storage = ref.watch(storageProvider);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,7 +32,7 @@ class ShareCharacter extends ConsumerWidget {
         const SizedBox(height: 28.0),
         AppBox(
           onTap: () async {
-            final revision = await readLatestCharacterRevision(uuid);
+            final revision = await storage.getCharacter(uuid);
             final revisionRaw = revision.writeToBuffer();
             Share.shareXFiles([XFile.fromData(revisionRaw)]);
           },
@@ -44,7 +44,7 @@ class ShareCharacter extends ConsumerWidget {
         const SizedBox(height: 28.0),
         AppBox(
           onTap: () async {
-            final revision = await readLatestCharacterRevision(uuid);
+            final revision = await storage.getCharacter(uuid);
             final revisionRaw = revision.writeToBuffer();
             log(revisionRaw.toString());
             log(revision.toDebugString());
@@ -57,8 +57,8 @@ class ShareCharacter extends ConsumerWidget {
         const SizedBox(height: 28.0),
         AppBox(
           onTap: () async {
-            final revision = await readLatestCharacterRevision(uuid);
-            await writeCharacterRevisionToAPI(revision);
+            // final revision = await storage.getCharacter(uuid);
+            // await writeCharacterRevisionToAPI("127.0.0.1:8080", revision);
           },
           child: const AppText(
             "Upload Latest Revision",
@@ -75,6 +75,7 @@ class ImportCharacter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final storage = ref.watch(storageProvider);
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,7 +93,8 @@ class ImportCharacter extends ConsumerWidget {
             if (result != null) {
               File file = File(result.files.single.path!);
               final character = Character.fromBuffer(file.readAsBytesSync());
-              final newRevision = await writeLatestCharacterRevision(character);
+              final newRevision =
+                  await storage.writeLatestCharacterRevision(character);
               log("loaded new revision $newRevision from file");
               ref.invalidate(characterListProvider);
               // ignore: use_build_context_synchronously

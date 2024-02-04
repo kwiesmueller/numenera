@@ -1,6 +1,7 @@
 import 'package:cypher_sheet/main.dart';
 import 'package:cypher_sheet/state/providers/character.dart';
 import 'package:cypher_sheet/state/providers/import.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cypher_sheet/components/appbar.dart' as app;
@@ -8,7 +9,6 @@ import 'package:cypher_sheet/components/box.dart';
 import 'package:cypher_sheet/components/scroll.dart';
 import 'package:cypher_sheet/components/text.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
 
 class ImportCharacterSelectionView extends ConsumerWidget {
   const ImportCharacterSelectionView({super.key});
@@ -72,6 +72,7 @@ class SimpleCharacterListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final storage = ref.watch(storageProvider);
     return FutureBuilder(
       future: metadata,
       builder: (context, snapshot) {
@@ -79,8 +80,7 @@ class SimpleCharacterListItem extends ConsumerWidget {
           return AppBox(
             color: Theme.of(context).colorScheme.surfaceTint,
             onTap: (() async {
-              final character =
-                  await readLatestCharacterRevision(snapshot.data!.uuid);
+              final character = await storage.getCharacter(snapshot.data!.uuid);
               ref.read(characterProvider.notifier).load(character);
               if (!context.mounted) return;
               Navigator.of(context).pushReplacementNamed(routeCharacter);

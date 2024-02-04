@@ -72,7 +72,7 @@ class SkillsView extends ConsumerWidget {
           ),
         ),
         if (searchActive)
-          SearchBar(
+          AppSearchBar(
             onSearch: (newValue) {
               ref.read(skillSearchProvider.notifier).state = newValue;
             },

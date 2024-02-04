@@ -50,6 +50,9 @@ enum AppIcons {
   deleteForever,
   share,
   import,
+  cloudSync,
+  link,
+  unlink,
   devMode;
 
   @override
@@ -148,6 +151,12 @@ String iconName(AppIcons from) {
       return "share";
     case AppIcons.import:
       return "system_update_alt";
+    case AppIcons.cloudSync:
+      return "cloud_sync";
+    case AppIcons.link:
+      return "link";
+    case AppIcons.unlink:
+      return "link_off";
     case AppIcons.devMode:
       return "developer_mode";
   }

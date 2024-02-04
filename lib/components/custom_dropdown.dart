@@ -928,11 +928,6 @@ class DropdownButton<T> extends StatefulWidget {
           'Either zero or 2 or more [DropdownMenuItem]s were detected '
           'with the same value',
         ),
-        assert(elevation != null),
-        assert(iconSize != null),
-        assert(isDense != null),
-        assert(isExpanded != null),
-        assert(autofocus != null),
         assert(itemHeight == null || itemHeight >= kMinInteractiveDimension),
         _inputDecoration = null,
         _isEmpty = false,
@@ -982,14 +977,7 @@ class DropdownButton<T> extends StatefulWidget {
           'Either zero or 2 or more [DropdownMenuItem]s were detected '
           'with the same value',
         ),
-        assert(elevation != null),
-        assert(iconSize != null),
-        assert(isDense != null),
-        assert(isExpanded != null),
-        assert(autofocus != null),
         assert(itemHeight == null || itemHeight >= kMinInteractiveDimension),
-        assert(isEmpty != null),
-        assert(isFocused != null),
         _inputDecoration = inputDecoration,
         _isEmpty = isEmpty,
         _isFocused = isFocused;
@@ -1658,12 +1646,7 @@ class DropdownButtonFormField<T> extends FormField<T> {
           'Either zero or 2 or more [DropdownMenuItem]s were detected '
           'with the same value',
         ),
-        assert(elevation != null),
-        assert(iconSize != null),
-        assert(isDense != null),
-        assert(isExpanded != null),
         assert(itemHeight == null || itemHeight >= kMinInteractiveDimension),
-        assert(autofocus != null),
         decoration = decoration ?? InputDecoration(focusColor: focusColor),
         super(
           initialValue: value,

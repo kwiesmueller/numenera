@@ -1,23 +1,31 @@
 import 'package:cypher_sheet/components/equipment.dart';
-import 'package:cypher_sheet/state/storage/migrations/initialize_inventories.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cypher_sheet/extensions/advancements.dart';
-import 'package:cypher_sheet/extensions/color.dart';
 import 'package:cypher_sheet/extensions/damage.dart';
 import 'package:cypher_sheet/extensions/pool.dart';
 import 'package:cypher_sheet/extensions/recovery.dart';
+import 'package:cypher_sheet/state/providers/storage.dart';
+import 'package:cypher_sheet/state/storage/migrations/initialize_inventories.dart';
+import 'package:cypher_sheet/state/storage/migrations/wipe_unknown_field_overlap.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cypher_sheet/extensions/color.dart';
 import 'package:cypher_sheet/proto/character.pb.dart';
-import 'package:cypher_sheet/state/storage/file.dart';
 import 'package:protobuf/protobuf.dart';
+import 'package:uuid/uuid.dart';
 
-class CharacterNotifier extends StateNotifier<Character> {
-  CharacterNotifier() : super(Character());
+class CharacterNotifier extends Notifier<Character> {
+  CharacterNotifier() : super();
+
+  @override
+  Character build() {
+    return Character().freeze() as Character;
+  }
 
   void load(Character character) {
     character = character.freeze() as Character;
     for (var migration in <Character Function(Character)>[
       initializeInventories,
+      wipeUnknownFieldsWithOverlappingKnownFieldsForCharacter,
     ]) {
       character = migration(character);
     }
@@ -36,7 +44,6 @@ class CharacterNotifier extends StateNotifier<Character> {
     required Color color,
   }) {
     state = Character(
-      uuid: uuid.v4(),
       name: name,
       descriptor: descriptor,
       type: type,
@@ -54,7 +61,7 @@ class CharacterNotifier extends StateNotifier<Character> {
       damage: Damage().freeze() as Damage,
       recovery: Recovery().freeze() as Recovery,
     ).freeze() as Character;
-    writeInitialCharacterRevision(state);
+    ref.watch(storageProvider).createCharacter(state);
   }
 
   void updateMetadata({
@@ -325,7 +332,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addAbility(Ability ability) {
     if (ability.uuid.isEmpty) {
-      ability.uuid = uuid.v4();
+      ability.uuid = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.abilities.add(ability.freeze() as Ability);
@@ -372,7 +379,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addCypher(Cypher cypher) {
     if (cypher.uuid.isEmpty) {
-      cypher.uuid = uuid.v4();
+      cypher.uuid = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.cyphers.add(cypher.freeze() as Cypher);
@@ -409,7 +416,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addArtifact(Artifact artifact) {
     if (artifact.uuid.isEmpty) {
-      artifact.uuid = uuid.v4();
+      artifact.uuid = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.artifacts.add(artifact.freeze() as Artifact);
@@ -446,7 +453,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addSkill(Skill skill) {
     if (skill.uuid.isEmpty) {
-      skill.uuid = uuid.v4();
+      skill.uuid = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.skills.add(skill.freeze() as Skill);
@@ -483,7 +490,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addItem(Item item) {
     if (item.path.self.isEmpty) {
-      item.path.self = uuid.v4();
+      item.path.self = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.items.add(item);
@@ -600,7 +607,7 @@ class CharacterNotifier extends StateNotifier<Character> {
 
   void addNote(Note note) {
     if (note.uuid.isEmpty) {
-      note.uuid = uuid.v4();
+      note.uuid = _uuid.v4();
     }
     state = state.rebuild((character) {
       character.notes.add(note.freeze() as Note);
@@ -653,4 +660,6 @@ class CharacterNotifier extends StateNotifier<Character> {
       character.money += add;
     });
   }
+
+  static const _uuid = Uuid();
 }

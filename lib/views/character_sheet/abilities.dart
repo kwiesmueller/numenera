@@ -80,7 +80,7 @@ class AbilitiesView extends ConsumerWidget {
           ),
         ),
         if (searchActive)
-          SearchBar(
+          AppSearchBar(
             onSearch: (newValue) {
               ref.read(abilitySearchProvider.notifier).state = newValue;
             },
