@@ -5,6 +5,7 @@ import 'package:cypher_sheet/proto/character.pb.dart';
 import 'package:cypher_sheet/state/storage/storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:protobuf/protobuf.dart';
 import 'package:uuid/uuid.dart';
 // Fixnum is needed for int64 support: https://developers.google.com/protocol-buffers/docs/reference/dart-generated#int64-fields
 // ignore: depend_on_referenced_packages
@@ -124,7 +125,7 @@ class LocalCharacterStorage implements CharacterStorage {
 
   void _writeCharacterRevision(Character character, int revision) async {
     if (character.uuid.isEmpty) {
-      character.uuid = _uuid.v4();
+      character = character.rebuild((character) => character.uuid = _uuid.v4());
     }
 
     final characterDirectory = await _getCharacterDirectory(character.uuid);

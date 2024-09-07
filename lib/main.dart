@@ -22,7 +22,6 @@ import 'package:cypher_sheet/views/character_sheet/view.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:uri_to_file/uri_to_file.dart';
 
-
 void main() async {
   late CharacterStorage storage;
   if (kIsWeb) {
@@ -55,7 +54,8 @@ class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
 
     if (!kIsWeb && Platform.isAndroid) {
       // For sharing coming from outside the app while the app is in the memory
-      _intentDataStreamSubscription = ReceiveSharingIntent.getMediaStream()
+      _intentDataStreamSubscription = ReceiveSharingIntent.instance
+          .getMediaStream()
           .listen((List<SharedMediaFile> value) {
         log("received media stream");
         importMediaFile(value);
@@ -63,9 +63,9 @@ class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
         log("getIntentDataStream error: $err");
       });
 
-
       // For sharing coming from outside the app while the app is closed
-      ReceiveSharingIntent.getInitialMedia()
+      ReceiveSharingIntent.instance
+          .getInitialMedia()
           .then((List<SharedMediaFile> value) {
         log("received initial media");
         importMediaFile(value);
@@ -133,7 +133,7 @@ class _CypherSheetAppState extends ConsumerState<CypherSheetApp> {
     final obj = SharedObject.fromBuffer(raw);
     file.deleteSync();
     ref.read(importObjectProvider.notifier).state = obj;
-    ReceiveSharingIntent.reset();
+    ReceiveSharingIntent.instance.reset();
   }
 
   @override
